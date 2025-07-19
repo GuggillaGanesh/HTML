@@ -1,0 +1,15 @@
+body{
+    background-color: blueviolet;
+    text-align: center;
+}
+h1{
+    color: violet;
+    height: 50px;
+}
+u{
+    color: darkgray;
+
+}
+form{
+    column-gap: 3;
+}

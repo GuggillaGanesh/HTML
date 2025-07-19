@@ -1,0 +1,88 @@
+body{
+    font-family: monospace;
+    color: #000;
+    background: linear-gradient(to right, #fc466b,#3f5efb);
+}
+h1{
+    color: blue;
+}
+u{
+    color: aquamarine;
+}
+header{
+    
+    background:linear-gradient(to right,#ec04ba,#edd205 );
+    height: 100vh;
+    text-align: center;
+    
+}
+.button{
+    height: 40px;
+    width: 150px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+header h1{
+    color: white;
+    margin: 0;
+}
+.button:hover{
+    color: rgb(232, 9, 202);
+    background-color: cadetblue;
+}
+img{
+    height: 200px;
+}
+
+img{
+    border-radius: 50%;
+}
+main{
+    padding: 20px;
+    text-align: center;
+    
+}
+section{
+    height: 100vh;
+    border: 1px solid blue;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.sub{
+    height: 40px;
+    width: 150px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+.sub:hover{
+    color: white;
+    background-color:green;
+}
+input{
+    border-radius: 5px;
+    border: 2px solid gray;
+    height: 25px;
+}
+footer{
+    text-align: center;
+    color: aqua;
+    background-color: #000;
+    height: 50px;
+}
+footer img{
+    height: 80px;
+    width: 80;
+    border-radius: 20px;
+    
+}
+.top{
+    height: 50px;
+    width: 50px;
+    border-radius: 50px;
+    cursor: pointer;
+    bottom: 0px;
+    right: 100px;
+    position: fixed;
+    color: white;
+    background: linear-gradient(to left,#ec04ba,#3f5efb);
+}

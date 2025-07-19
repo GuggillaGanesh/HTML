@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Story Button</title>
+  <style>
+    #storyDisplay {
+      margin-top: 20px;
+      font-size: 18px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Button with story stored in a data attribute -->
+<button id="storyButton" ">
+  Show Story
+</button>
+
+<!-- Area to display the story -->
+<div id="storyDisplay"></div>
+
+<script>
+  const button = document.getElementById('storyButton');
+  const display = document.getElementById('storyDisplay');
+
+  button.addEventListener('click', () => {
+    const story = button.getAttribute('data-story');
+    display.textContent = story;
+  });
+</script>
+
+</body>
+</html>

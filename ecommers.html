@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Toy Store</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .store {
+      display: flex;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    .products {
+      flex: 3;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .product {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .product img {
+      width: 100%;
+      max-height: 150px;
+      object-fit: contain;
+    }
+
+    .product h3 {
+      margin: 10px 0;
+    }
+
+    .product button {
+      padding: 8px 16px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .product button:hover {
+      background: #555;
+    }
+
+    .cart {
+      flex: 1;
+      margin-left: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .cart h2 {
+      margin-bottom: 15px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .total {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Toy Store</h1>
+  </header>
+
+  <div class="store">
+    <div class="products" id="product-list"></div>
+
+    <div class="cart">
+      <h2>🛒 Cart</h2>
+      <div id="cart-items">
+        <p>Your cart is empty.</p>
+      </div>
+      <p class="total" id="cart-total">Total: ₹0.00</p>
+    </div>
+  </div>
+
+  <script>
+    const products = [
+     {
+      id: 1,
+      name: "Lego Classic Bricks",
+      price: 2499,
+      image: "https://www.lego.com/cdn/cs/set/assets/bltdec2ef6c0b99515a/11038_Box1_v39.png?format=webply&fit=bounds&quality=60&width=800&height=800&dpr=2"
+    },
+
+      {
+        id: 2,
+        name: "Teddy Bear Plush",
+        price: 899,
+        image: "https://cdn.pixabay.com/photo/2020/03/10/13/26/teddy-4919440_1280.jpg"
+      },
+      {
+        id: 3,
+        name: "Toy Car (Hot Wheels)",
+        price: 499,
+        image: "https://cdn.pixabay.com/photo/2017/02/01/22/02/hot-wheels-2032115_1280.jpg"
+      },
+      {
+        id: 4,
+        name: "Toy Blocks Set",
+        price: 799,
+        image: "https://cdn.pixabay.com/photo/2018/01/22/11/58/building-blocks-3094031_1280.jpg"
+      },
+      {
+        id: 5,
+        name: "Robot Action Figure",
+        price: 1199,
+        image: "https://cdn.pixabay.com/photo/2016/05/05/02/37/toy-1372155_1280.jpg"
+      },
+      {
+        id: 6,
+        name: "Colorful Ball Set",
+        price: 299,
+        image: "https://cdn.pixabay.com/photo/2016/12/27/16/16/balls-1932113_1280.jpg"
+      }
+    ];
+
+    const productList = document.getElementById("product-list");
+    const cartItemsEl = document.getElementById("cart-items");
+    const cartTotalEl = document.getElementById("cart-total");
+    const cart = [];
+
+    function displayProducts() {
+      products.forEach(product => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `
+          <img src="${product.image}" alt="${product.name}" />
+          <h3>${product.name}</h3>
+          <p>₹${product.price.toFixed(2)}</p>
+          <button onclick="addToCart(${product.id})">Add to Cart</button>
+        `;
+        productList.appendChild(div);
+      });
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.qty++;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+      updateCart();
+    }
+
+    function updateCart() {
+      cartItemsEl.innerHTML = "";
+      if (cart.length === 0) {
+        cartItemsEl.innerHTML = "<p>Your cart is empty.</p>";
+        cartTotalEl.textContent = "Total: ₹0.00";
+        return;
+      }
+
+      let total = 0;
+
+      cart.forEach(item => {
+        total += item.price * item.qty;
+        const div = document.createElement("div");
+        div.className = "cart-item";
+        div.innerHTML = `
+          <span>${item.name} x ${item.qty}</span>
+          <span>₹${(item.price * item.qty).toFixed(2)}</span>
+        `;
+        cartItemsEl.appendChild(div);
+      });
+
+      cartTotalEl.textContent = `Total: ₹${total.toFixed(2)}`;
+    }
+
+    displayProducts();
+  </script>
+</body>
+</html>
