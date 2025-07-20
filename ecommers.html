@@ -14,7 +14,7 @@
     }
 
     header {
-      background: rgba(0, 0, 0, 0.7);
+      background:linear-gradient(to right, #d712b6, #e00619);
       color: #fff;
       padding: 20px;
       text-align: center;
@@ -67,7 +67,7 @@
     .cart {
       flex: 1;
       margin-left: 20px;
-      background: #fff;
+      background: linear-gradient(to right, #fbff02, #4be006);
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -80,7 +80,23 @@
     .cart-item {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin: 10px 0;
+    }
+
+    .cart-item button {
+      margin: 0 5px;
+      padding: 3px 8px;
+      font-size: 16px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cart-item button:hover {
+      background: #555;
     }
 
     .total {
@@ -108,42 +124,41 @@
 
   <script>
     const products = [
-     {
-      id: 1,
-      name: "Lego Classic Bricks",
-      price: 2499,
-      image: "https://www.lego.com/cdn/cs/set/assets/bltdec2ef6c0b99515a/11038_Box1_v39.png?format=webply&fit=bounds&quality=60&width=800&height=800&dpr=2"
-    },
-
+      {
+        id: 1,
+        name: "Lego Classic Bricks and<br> Animals 900 Piece Set",
+        price: 2499,
+        image: "https://www.lego.com/cdn/cs/set/assets/bltdec2ef6c0b99515a/11038_Box1_v39.png?format=webply&fit=bounds&quality=60&width=800&height=800&dpr=2"
+      },
       {
         id: 2,
         name: "Teddy Bear Plush",
         price: 899,
-        image: "https://cdn.pixabay.com/photo/2020/03/10/13/26/teddy-4919440_1280.jpg"
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTTHk2TALXLpBrYoDDsLTwgiQRMU0Y64kJDQ&s"
       },
       {
         id: 3,
         name: "Toy Car (Hot Wheels)",
         price: 499,
-        image: "https://cdn.pixabay.com/photo/2017/02/01/22/02/hot-wheels-2032115_1280.jpg"
+        image: "https://cdn.pixelspray.io/v2/black-bread-289bfa/HrdP6X/original/hamleys-product/490160791/665/490160791-1.webp"
       },
       {
         id: 4,
-        name: "Toy Blocks Set",
+        name: "Toy Blocks Set <br> (200 pcs)",
         price: 799,
-        image: "https://cdn.pixabay.com/photo/2018/01/22/11/58/building-blocks-3094031_1280.jpg"
+        image: "https://www.bbassets.com/media/uploads/p/xl/40333495_2-ekta-house-building-blocks-set-2.jpg"
       },
       {
         id: 5,
         name: "Robot Action Figure",
         price: 1199,
-        image: "https://cdn.pixabay.com/photo/2016/05/05/02/37/toy-1372155_1280.jpg"
+        image: "https://cdn.fcglcdn.com/brainbees/images/products/438x531/18953080a.webp"
       },
       {
         id: 6,
-        name: "Colorful Ball Set",
+        name: "Colorful Ball Set<br> (100 pcs)",
         price: 299,
-        image: "https://cdn.pixabay.com/photo/2016/12/27/16/16/balls-1932113_1280.jpg"
+        image: "https://rukminim2.flixcart.com/image/704/844/ksdjma80/honeycomb-pom-ball/a/4/5/200-pcs-medium-size-premium-balls-color-balls-for-kids-pool-original-imag5ymfzkapvumv.jpeg?q=90&crop=false"
       }
     ];
 
@@ -192,13 +207,31 @@
         const div = document.createElement("div");
         div.className = "cart-item";
         div.innerHTML = `
-          <span>${item.name} x ${item.qty}</span>
+          <span>
+            ${item.name} <br>
+            <button onclick="changeQty(${item.id}, -1)">−</button>
+            ${item.qty}
+            <button onclick="changeQty(${item.id}, 1)">+</button>
+          </span>
           <span>₹${(item.price * item.qty).toFixed(2)}</span>
         `;
         cartItemsEl.appendChild(div);
       });
 
       cartTotalEl.textContent = `Total: ₹${total.toFixed(2)}`;
+    }
+
+    function changeQty(productId, delta) {
+      const item = cart.find(p => p.id === productId);
+      if (!item) return;
+
+      item.qty += delta;
+      if (item.qty <= 0) {
+        const index = cart.findIndex(p => p.id === productId);
+        cart.splice(index, 1);
+      }
+
+      updateCart();
     }
 
     displayProducts();
