@@ -11,5 +11,29 @@ u{
 
 }
 form{
-    column-gap: 3;
+    columns: 1;
+    margin: 0 auto;
+}label{
+    color: white;
+    font-size: 20px;
+    display: block;
+    margin: 10px 0;
+    text-align: center;
+    font-family: Arial, sans-serif; 
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+
 }
+{name:"Basmati Rice", price:150, quality:"Excellent", img:"https://5.imimg.com/data5/ANDROID/Default/2022/1/LD/JO/AR/85849429/product-jpeg.jpg"},
+      {name:"Turmeric Spice", price:200, quality:"Excellent", img:"https://m.media-amazon.com/images/I/81NrjPnmBUL._UF1000,1000_QL80_.jpg"},
+      {name:"Black Tea", price:250, quality:"Good", img:"https://m.media-amazon.com/images/I/71rtxZgzOWL.jpg"},
+        {name:"Organic Wheat Flour", price:120 , quality:"Good", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsITu7NQoztMzLzRS0FowZske8ymNp_8Goyw&s"},
+         {name:"Ginger", price:220, quality:"Good", img:"https://images-cdn.ubuy.co.in/67fb81fe54dc723943012088-organic-ginger-powder-2lbs-32oz.jpg"},
+        {name:"Fresh Spinach", price:80, quality:"Fresh", img:"https://m.media-amazon.com/images/I/51T3025eGcL._UF1000,1000_QL80_.jpg"},
+        {name:"Honey", price:300, quality:"Pure", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQB9vidPJnZtlT7If35oElKJN6GjltGJMI4Nw&s"},
+        { name: "Fresh Apples", price: 120, quality: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9wsG-68QfkOkIR7Ysa_CFmpjBx1LbksAx1g&s" },
+        { name: "Organic Potatoes", price: 60, quality: "Fresh", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ50kOIf3s2YknST25PHxiPKL1yHPqQwo2zkQ&s" },
+        { name: "Green Beans", price: 90, quality: "Fresh", img: "https://cdn.loveandlemons.com/wp-content/uploads/2014/11/green-beans-2.jpg" },
+       

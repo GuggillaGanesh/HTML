@@ -1,31 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="loin.css">
+  <meta charset="UTF-8">
+  <title>Agri Shop w/ Details, Cart, Delivery & Rating</title>
+  <style>
+    body { font-family: Arial; background: #f7f7f7; padding: 20px; color: #333; }
+    h1,h2,h3 { color: #2f5d2e; margin-bottom: 10px; }
+    .hidden { display: none; }
+    .error { color: #c00; font-size: .9em; }
+    form, .dashboard { background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+    input, button { width:100%; padding:8px; margin:6px 0; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+    button { background: #4caf50; color: #fff; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .products { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+    .product { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px; text-align:center; cursor:pointer; }
+    .product img { width:100%; height:100px; object-fit:cover; border-radius:4px; }
+    
+    /* Modal styles */
+    .modal, #cartModal { position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #444; padding:15px; border-radius:6px; width:80%; max-width:400px; max-height:70%; overflow:auto; display:none; z-index:1000; }
+    .modal .close, #cartModal .close { float:right; cursor:pointer; font-size:1.2em; }
+    .modal img { width:100%; height:200px; object-fit:cover; margin-bottom:10px; border-radius:4px; }
+    .rating span { font-size:25px; cursor:pointer; }
+    .rating .selected { color: orange; }
+    #cartModal table { width:100%; border-collapse:collapse; margin:10px 0; }
+    #cartModal th, #cartModal td { border:1px solid #ccc; padding:6px; }
+  </style>
 </head>
 <body>
-    <form action="">
-        <u>
-        <h1>Login form</h1>
-        </u>
-        
-        <u><label for="username">UserName:</label>
-        <input type="text"><br>
-        </u>
-        <u>
-        <label for="email">Email:</label>
-        <input type="email"><br>
-        </u>
-        <u>
-        <label for="password">Password:</label>
-        <input type="number">
-        </u>
-        <a href=""><br>
-        <button>Submit</button><br>
-        </a>
-    </form>
+  <h1>Agri Shop</h1>
+
+  <!-- Login Steps -->
+  <form id="mobForm">
+    <h2>1. Enter Mobile</h2>
+    <input type="text" id="mobIn" placeholder="+919876543210" required><button>Send OTP</button><span class="error" id="mErr"></span>
+  </form>
+  <form id="otpForm" class="hidden">
+    <h2>2. Enter OTP</h2>
+    <input type="text" id="otpIn" placeholder="4-digit OTP" inputmode="numeric" required><button>Verify</button><span class="error" id="oErr"></span>
+  </form>
+  <form id="userForm" class="hidden">
+    <h2>3. Set Username</h2>
+    <input type="text" id="userIn" placeholder="Name" required><button>Continue</button><span class="error" id="uErr"></span>
+  </form>
+
+  <!-- Dashboard -->
+  <div id="dash" class="hidden dashboard">
+    <h2>Welcome, <span id="userName"></span></h2>
+    <button id="logoutBtn">Logout</button>
+    <h3>Products</h3>
+    <div class="products" id="prodList"></div>
+    <button id="viewCartBtn">View Cart (<span id="cartCount">0</span>)</button>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div id="prodModal" class="modal">
+    <span class="close">&times;</span>
+    <img id="pmImg"><h4 id="pmName"></h4><p id="pmPrice"></p><p id="pmExpiry"></p><p id="pmQuality"></p>
+    <div class="rating" id="pmRating">
+      <span data-val="1">&#9733;</span><span data-val="2">&#9733;</span><span data-val="3">&#9733;</span><span data-val="4">&#9733;</span><span data-val="5">&#9733;</span>
+    </div>
+    <button id="modalAddBtn">Add to Cart</button>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cartModal">
+    <span class="close">&times;</span><h3>Your Cart</h3>
+    <table><thead><tr><th>Prod</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody id="cartBody"></tbody></table>
+    <p>Delivery: ₹<span id="delvChg">0</span></p><p><strong>Total: ₹<span id="grandTotal">0</span></strong></p>
+    <button id="clearCartBtn">Clear Cart</button>
+  </div>
+
+<script>
+(() => {
+  const mobForm = document.getElementById('mobForm'),
+        otpForm = document.getElementById('otpForm'),
+        userForm = document.getElementById('userForm'),
+        dash = document.getElementById('dash'),
+        mobErr = document.getElementById('mErr'),
+        oErr = document.getElementById('oErr'),
+        uErr = document.getElementById('uErr'),
+        mobIn = document.getElementById('mobIn'),
+        otpIn = document.getElementById('otpIn'),
+        userIn = document.getElementById('userIn'),
+        userName = document.getElementById('userName'),
+        prodList = document.getElementById('prodList'),
+        viewCartBtn = document.getElementById('viewCartBtn'),
+        cartCount = document.getElementById('cartCount'),
+        prodModal = document.getElementById('prodModal'),
+        cartModal = document.getElementById('cartModal'),
+        cartBody = document.getElementById('cartBody'),
+        delvChg = document.getElementById('delvChg'),
+        grandTotal = document.getElementById('grandTotal'),
+        clearCartBtn = document.getElementById('clearCartBtn'),
+        logoutBtn = document.getElementById('logoutBtn'),
+        prodClose = prodModal.querySelector('.close'),
+        cartClose = cartModal.querySelector('.close'),
+        pmImg = document.getElementById('pmImg'),
+        pmName = document.getElementById('pmName'),
+        pmPrice = document.getElementById('pmPrice'),
+        pmExpiry = document.getElementById('pmExpiry'),
+        pmQuality = document.getElementById('pmQuality'),
+        pmRating = document.getElementById('pmRating'),
+        modalAddBtn = document.getElementById('modalAddBtn');
+
+  let otp = '', mobile = '', username = '', selectedProd = null;
+  const deliveryPerItem = 50;
+  let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
+
+  function saveCart() {
+    sessionStorage.setItem('cart', JSON.stringify(cart));
+    cartCount.textContent = Object.values(cart).reduce((s,i)=>s+i.qty,0);
+  }
+
+  mobForm.onsubmit = e => {
+    e.preventDefault();
+    mobile = mobIn.value.trim();
+    if(!/^\+\d{10,15}$/.test(mobile)){ mobErr.innerText='Invalid format'; return; }
+    otp = Array.from({length:4},()=>Math.floor(Math.random()*10)).join('');
+    console.log('OTP:',otp);
+    mobForm.classList.add('hidden');
+    otpForm.classList.remove('hidden');
+  };
+
+  otpForm.onsubmit = e => {
+    e.preventDefault();
+    if(otpIn.value!==otp){ oErr.innerText='Wrong OTP'; return; }
+    sessionStorage.setItem('mobile', mobile);
+    otpForm.classList.add('hidden');
+    userForm.classList.remove('hidden');
+  };
+
+  userForm.onsubmit = e => {
+    e.preventDefault();
+    username = userIn.value.trim();
+    if(!username){ uErr.innerText='Enter name'; return; }
+    sessionStorage.setItem('username', username);
+    userName.textContent = username;
+    userForm.classList.add('hidden');
+    dash.classList.remove('hidden');
+    loadProducts(); saveCart();
+  };
+
+  function loadProducts() {
+    const exp = new Date(Date.now()+7*864e5).toISOString().split('T')[0];
+    const prods = [
+      {name:"Basmati Rice", price:150, quality:"Excellent", img:"https://5.imimg.com/data5/ANDROID/Default/2022/1/LD/JO/AR/85849429/product-jpeg.jpg"},
+      {name:"Turmeric Spice", price:200, quality:"Excellent", img:"https://m.media-amazon.com/images/I/81NrjPnmBUL._UF1000,1000_QL80_.jpg"},
+      {name:"Black Tea", price:250, quality:"Good", img:"https://m.media-amazon.com/images/I/71rtxZgzOWL.jpg"},
+        {name:"Organic Wheat Flour", price:120 , quality:"Good", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsITu7NQoztMzLzRS0FowZske8ymNp_8Goyw&s"},
+         {name:"Ginger", price:220, quality:"Good", img:"https://images-cdn.ubuy.co.in/67fb81fe54dc723943012088-organic-ginger-powder-2lbs-32oz.jpg"},
+        {name:"Fresh Spinach", price:80, quality:"Fresh", img:"https://m.media-amazon.com/images/I/51T3025eGcL._UF1000,1000_QL80_.jpg"},
+        {name:"Honey", price:300, quality:"Pure", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQB9vidPJnZtlT7If35oElKJN6GjltGJMI4Nw&s"},
+        { name: "Organic Potatoes", price: 60, quality: "Fresh", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ50kOIf3s2YknST25PHxiPKL1yHPqQwo2zkQ&s" },
+        { name: "Green Beans", price: 90, quality: "Fresh", img: "https://cdn.loveandlemons.com/wp-content/uploads/2014/11/green-beans-2.jpg" },
+       
+    ];
+    prodList.innerHTML = '';
+    prods.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'product';
+      d.innerHTML = `<img src="${p.img}" alt="${p.name}"><h4>${p.name}</h4><p>₹${p.price}</p>`;
+      d.onclick = () => {
+        selectedProd = {...p,expiry:exp};
+        pmImg.src = p.img; pmName.textContent = p.name;
+        pmPrice.textContent = 'Price: ₹'+p.price;
+        pmExpiry.textContent = 'Expiry: '+exp;
+        pmQuality.textContent = 'Quality: '+p.quality;
+        [...pmRating.children].forEach(s => s.classList.remove('selected'));
+        prodModal.style.display = 'block';
+      };
+      prodList.appendChild(d);
+    });
+  }
+
+  pmRating.onclick = e => {
+    if(e.target.dataset.val){
+      const val = e.target.dataset.val;
+      [...pmRating.children].forEach(s => s.classList.toggle('selected', s.dataset.val<=val));
+      selectedProd.rating = val;
+    }
+  };
+
+  modalAddBtn.onclick = () => {
+    if(!selectedProd.rating) alert('Please select a rating!');
+    else {
+      cart[selectedProd.name] = cart[selectedProd.name] || {...selectedProd, qty:0};
+      cart[selectedProd.name].qty++;
+      saveCart();
+      prodModal.style.display = 'none';
+    }
+  };
+  prodClose.onclick = () => prodModal.style.display='none';
+
+  viewCartBtn.onclick = () => {
+    cartBody.innerHTML = '';
+    let subtotal = 0, itemCount=0;
+    Object.values(cart).forEach(i=>{
+      itemCount+=i.qty;
+      const sub = i.qty*i.price;
+      subtotal+=sub;
+      cartBody.innerHTML += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${sub}</td></tr>`;
+    });
+    delvChg.textContent = itemCount*deliveryPerItem;
+    grandTotal.textContent = subtotal + itemCount*deliveryPerItem;
+    cartModal.style.display = 'block';
+  };
+  cartClose.onclick = () => cartModal.style.display='none';
+  clearCartBtn.onclick = () => { cart={}; saveCart(); cartBody.innerHTML=''; delvChg.textContent='0'; grandTotal.textContent='0'; };
+
+  logoutBtn.onclick = () => sessionStorage.clear() && location.reload();
+
+  window.onload = () => {
+    mobile = sessionStorage.getItem('mobile');
+    username = sessionStorage.getItem('username');
+    if(mobile && username){
+      userName.textContent = username;
+      mobForm.classList.add('hidden'); otpForm.classList.add('hidden');
+      userForm.classList.add('hidden'); dash.classList.remove('hidden');
+      loadProducts(); saveCart();
+    }
+  };
+})();
+</script>
 </body>
 </html>
