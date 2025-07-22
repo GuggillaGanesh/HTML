@@ -1,15 +1,586 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<title>Med Tab Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --green: rgba(0,128,0,0.8);
+    --radius: 10px;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    background: url('https://images.unsplash.com/photo-1558642452-9d2a7deb7f62') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+  }
+  .hidden { display: none !important; }
+  header {
+    background: var(--green);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
+  input, button, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 16px;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+  .product {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s;
+  }
+  .product:hover { transform: scale(1.03); }
+  .modal, #receiptOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .modal-content, #receiptContent {
+    background: white;
+    padding: 15px;
+    width: 90%;
+    max-width: 350px;
+    border-radius: var(--radius);
+    text-align: center;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .close {
+    position: absolute;
+    top: 10px; right: 15px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .logos img {
+    width: 50px;
+    margin: 0 10px;
+    vertical-align: middle;
+  }
+  table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+  .top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mini-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+  .logout-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .doctor-btn {
+    background-color: #0077ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .doctor-card {
+    display: flex;
+    gap: 10px;
+    text-align: left;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: var(--radius);
+    margin: 10px 0;
+    background:#fafafa;
+  }
+  .doctor-card img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .doctor-card h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+  }
+  .doctor-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .disease-select-label {
+    margin-top:5px;
+    font-weight:bold;
+    font-size:16px;
+    display:block;
+    text-align:left;
+  }
+  .link-btn {
+    background:none;
+    border:none;
+    color:#0077ff;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+    width:auto;
+    margin:0;
+    font-size:14px;
+  }
+  /* Cart price summary */
+  .price-summary {
+    margin-top:10px;
+    text-align:right;
+    font-size:16px;
+  }
+  .price-summary span {
+    display:block;
+    margin:2px 0;
+  }
+  .price-summary .grand {
+    font-weight:bold;
+    font-size:18px;
+  }
+</style>
 </head>
 <body>
-    <iframe 
-    width="560"
-    height="315" 
-    src="https://www.youtube.com/embed/8HiWKbDTc7w?si=2m3BH0ZwHV4XCTAR" 
-    title="YouTube video player" ></iframe>
+
+<header><h1>Med Tab Store</h1></header>
+
+<!-- LOGIN -->
+<div id="loginPage" class="container">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Enter username">
+  <input type="password" id="password" placeholder="Enter password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- MAIN -->
+<div id="mainPage" class="container hidden">
+  <div class="top-bar">
+    <h2>Welcome <span id="user"></span></h2>
+    <div style="display:flex;gap:8px;">
+      <button class="mini-btn doctor-btn" onclick="openDoctorModal()">Doctors</button>
+      <button class="mini-btn logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <h3>Tablet Types</h3>
+  <select id="typeFilter" onchange="applyTypeFilter()">
+    <option value="all">All</option>
+    <option value="Fever">Fever</option>
+    <option value="Pain Relief">Pain Relief</option>
+    <option value="Allergy">Allergy</option>
+    <option value="Antibiotic">Antibiotic</option>
+    <option value="General">General</option>
+  </select>
+
+  <h3>Our Tablets</h3>
+  <div class="product-grid" id="products"></div>
+
+  <button onclick="openCart()">🛒 View Cart (<span id="cartCount">0</span>)</button>
+</div>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('productModal')">&times;</span>
+    <img id="prodImg" width="100%">
+    <h4 id="prodName"></h4>
+    <p>Type: <span id="prodType"></span></p>
+    <p>Price: ₹<span id="prodPrice"></span></p>
+    <button onclick="addToCart()">Add to Cart</button>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal" id="cartModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('cartModal')">&times;</span>
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <input type="text" id="address" placeholder="Enter delivery address">
+    <input type="text" id="phone" placeholder="Enter phone number">
+    <h4>Choose Payment</h4>
+    <div class="logos">
+      <label><input type="radio" name="pay" value="PhonePe"> <img src="phonepe.png" alt="PhonePe"></label>
+      <label><input type="radio" name="pay" value="Google Pay"> <img src="googlepay.avif" alt="Google Pay"></label>
+      <label><input type="radio" name="pay" value="Paytm"> <img src="paytm.png" alt="Paytm"></label>
+    </div>
+    <button onclick="confirmOrder()">Confirm Order</button>
+  </div>
+</div>
+
+<!-- DOCTOR MODAL -->
+<div class="modal" id="doctorModal">
+  <div class="modal-content" style="max-width:500px;">
+    <span class="close" onclick="closeModal('doctorModal')">&times;</span>
+    <h2>Doctor Consultation</h2>
+    <label class="disease-select-label" for="diseaseSelect">Select Disease / Symptom:</label>
+    <select id="diseaseSelect" onchange="renderDoctors()">
+      <option value="all">All</option>
+      <option value="Fever">Fever</option>
+      <option value="Pain">Pain</option>
+      <option value="Allergy">Allergy</option>
+      <option value="Infection">Infection</option>
+      <option value="General">General</option>
+    </select>
+    <div id="doctorRecommend" style="margin-top:10px;"></div>
+    <hr>
+    <div id="doctorList"></div>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div id="receiptOverlay">
+  <div id="receiptContent">
+    <span class="close" onclick="document.getElementById('receiptOverlay').style.display='none'">&times;</span>
+    <h2>🧾 Receipt</h2>
+    <div id="receiptText"></div>
+    <button onclick="window.print()">🖨️ Print</button>
+  </div>
+</div>
+
+<script>
+/* ------------------ DATA ------------------ */
+let cart = [];
+let selectedProduct = null;
+
+const productData = [
+  {name:'Paracetamol',  price:30, type:'Fever',       img:'https://texinkart.com/cdn/shop/products/Calpol-500----Paracetamol-Tablets-IP-500mg---15Tablets-GSK-1667079349.jpg?v=1747710965'},
+  {name:'Ibuprofen',    price:45, type:'Pain Relief', img:'https://via.placeholder.com/150?text=Ibuprofen'},
+  {name:'Aspirin',      price:60, type:'Pain Relief', img:'https://via.placeholder.com/150?text=Aspirin'},
+  {name:'Amoxicillin',  price:90, type:'Antibiotic',  img:'https://via.placeholder.com/150?text=Amoxicillin'},
+  {name:'Cetrizine',    price:25, type:'Allergy',     img:'https://via.placeholder.com/150?text=Cetrizine'},
+  {name:'Dolo 650',     price:35, type:'Fever',       img:'https://via.placeholder.com/150?text=Dolo+650'}
+];
+
+const doctorData = [
+  {
+    name:'Dr. Ramesh Kumar',
+    specialty:'General Physician',
+    diseases:['Fever','General'],
+    phone:'+91-9000000001',
+    email:'dr.ramesh@example.com',
+    img:'https://via.placeholder.com/100?text=Dr+R'
+  },
+  {
+    name:'Dr. Anita Rao',
+    specialty:'Allergist / Immunologist',
+    diseases:['Allergy'],
+    phone:'+91-9000000002',
+    email:'dr.anita@example.com',
+    img:'https://via.placeholder.com/100?text=Dr+A'
+  },
+  {
+    name:'Dr. Vivek Sharma',
+    specialty:'Infectious Disease',
+    diseases:['Infection','Fever'],
+    phone:'+91-9000000003',
+    email:'dr.vivek@example.com',
+    img:'https://via.placeholder.com/100?text=Dr+V'
+  },
+  {
+    name:'Dr. Priya Menon',
+    specialty:'Pain Specialist',
+    diseases:['Pain'],
+    phone:'+91-9000000004',
+    email:'dr.priya@example.com',
+    img:'https://via.placeholder.com/100?text=Dr+P'
+  }
+];
+
+/* Disease → Recommended tablet types (mapped to product types) */
+const diseaseRecommendations = {
+  'Fever':['Fever'],
+  'Pain':['Pain Relief'],
+  'Allergy':['Allergy'],
+  'Infection':['Antibiotic'],
+  'General':['Fever','Pain Relief','Allergy','Antibiotic','General']
+};
+
+/* ------------------ AUTH ------------------ */
+function login() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  if (u && p) {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainPage').classList.remove('hidden');
+    document.getElementById('user').innerText = u;
+    showProducts(); // default show all
+  } else {
+    alert("Please enter username & password.");
+  }
+}
+
+function logout() {
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('products').innerHTML = '';
+  document.getElementById('cartCount').innerText = 0;
+  document.getElementById('typeFilter').value = 'all';
+  cart = [];
+}
+
+/* ------------------ PRODUCTS ------------------ */
+function showProducts(filterType='all') {
+  const div = document.getElementById('products');
+  div.innerHTML = '';
+  const list = filterType === 'all' 
+      ? productData 
+      : productData.filter(p => p.type === filterType);
+  if (list.length === 0) {
+    div.innerHTML = '<p>No tablets found for this type.</p>';
+    return;
+  }
+  list.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'product';
+    el.innerHTML = `
+      <img src="${p.img}" width="100%" alt="${p.name}">
+      <h4>${p.name}</h4>
+      <p>₹${p.price}</p>
+      <small>${p.type}</small>
+    `;
+    el.onclick = () => showProduct(p);
+    div.appendChild(el);
+  });
+}
+
+function applyTypeFilter() {
+  const type = document.getElementById('typeFilter').value;
+  showProducts(type === 'all' ? 'all' : type);
+}
+
+function showProduct(p) {
+  selectedProduct = p;
+  document.getElementById('prodImg').src = p.img;
+  document.getElementById('prodName').innerText = p.name;
+  document.getElementById('prodType').innerText = p.type;
+  document.getElementById('prodPrice').innerText = p.price;
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function addToCart() {
+  if (!selectedProduct) return;
+  cart.push(selectedProduct);
+  document.getElementById('cartCount').innerText = cart.length;
+  closeModal('productModal');
+}
+
+/* ------------------ CART ------------------ */
+function openCart() {
+  const div = document.getElementById('cartItems');
+  div.innerHTML = '';
+  let subtotal = 0;
+  cart.forEach((p,i) => {
+    div.innerHTML += `<p>${p.name} - ₹${p.price}</p>`;
+    subtotal += p.price;
+  });
+  const discount = +(subtotal * 0.05).toFixed(2);
+  const grand = subtotal - discount;
+
+  div.innerHTML += `
+    <div class="price-summary">
+      <span>Subtotal: ₹${subtotal.toFixed(2)}</span>
+      <span>5% Discount: -₹${discount.toFixed(2)}</span>
+      <span class="grand">Grand Total: ₹${grand.toFixed(2)}</span>
+    </div>
+  `;
+  document.getElementById('cartModal').style.display = 'flex';
+}
+
+function confirmOrder() {
+  const addr = document.getElementById('address').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const pay = document.querySelector('input[name="pay"]:checked');
+  if (!addr || !phone || !pay) {
+    alert("Please fill all details and select payment method.");
+    return;
+  }
+  let txt = `
+    <p><strong>Address:</strong> ${addr}</p>
+    <p><strong>Phone:</strong> ${phone}</p>
+    <p><strong>Payment:</strong> ${pay.value}</p>
+    <hr>
+  `;
+  let subtotal = 0;
+  cart.forEach(p => {
+    txt += `<p>${p.name} - ₹${p.price}</p>`;
+    subtotal += p.price;
+  });
+  const discount = +(subtotal * 0.05).toFixed(2);
+  const grand = subtotal - discount;
+  txt += `
+    <hr>
+    <p>Subtotal: ₹${subtotal.toFixed(2)}</p>
+    <p>5% Discount: -₹${discount.toFixed(2)}</p>
+    <h3>Total Paid: ₹${grand.toFixed(2)}</h3>
+  `;
+  document.getElementById('receiptText').innerHTML = txt;
+  document.getElementById('cartModal').style.display = 'none';
+  document.getElementById('receiptOverlay').style.display = 'flex';
+  cart = [];
+  document.getElementById('cartCount').innerText = 0;
+}
+
+/* ------------------ DOCTORS ------------------ */
+function openDoctorModal() {
+  document.getElementById('doctorModal').style.display = 'flex';
+  document.getElementById('diseaseSelect').value = 'all';
+  renderDoctors();
+}
+
+function renderDoctors() {
+  const selected = document.getElementById('diseaseSelect').value;
+  const listDiv = document.getElementById('doctorList');
+  const recDiv = document.getElementById('doctorRecommend');
+  listDiv.innerHTML = '';
+  recDiv.innerHTML = '';
+
+  // Recommended tablet types
+  let recTypes = [];
+  if (selected === 'all') {
+    recTypes = ['Fever','Pain Relief','Allergy','Antibiotic'];
+  } else {
+    // map disease key to product type(s)
+    recTypes = diseaseRecommendations[selected] || [];
+  }
+  if (recTypes.length) {
+    const btns = recTypes.map(t => 
+      `<button class="link-btn" onclick="selectTypeFromDoctor('${t}')">${t}</button>`
+    ).join(' | ');
+    recDiv.innerHTML = `<strong>Recommended Tablet Types:</strong> ${btns}`;
+  }
+
+  // Filter doctors by disease
+  const docs = selected === 'all'
+    ? doctorData
+    : doctorData.filter(d => d.diseases.includes(selected));
+
+  if (docs.length === 0) {
+    listDiv.innerHTML = '<p>No doctors found for this disease.</p>';
+    return;
+  }
+
+  docs.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'doctor-card';
+    card.innerHTML = `
+      <img src="${d.img}" alt="${d.name}">
+      <div>
+        <h4>${d.name}</h4>
+        <p><strong>${d.specialty}</strong></p>
+        <p>Treats: ${d.diseases.join(', ')}</p>
+        <p>📞 ${d.phone}</p>
+        <p>✉️ ${d.email}</p>
+      </div>
+    `;
+    listDiv.appendChild(card);
+  });
+}
+
+function selectTypeFromDoctor(typeName) {
+  closeModal('doctorModal');
+  document.getElementById('typeFilter').value = typeName;
+  applyTypeFilter();
+  // Scroll to product section
+  document.getElementById('products').scrollIntoView({behavior:'smooth'});
+}
+function confirmOrder() {
+  const addr = document.getElementById('address').value;
+  const phone = document.getElementById('phone').value;
+  const pay = document.querySelector('input[name="pay"]:checked');
+
+  if (!addr || !phone || !pay) {
+    alert("Please fill all details and select payment method.");
+    return;
+  }
+
+  let txt = `<p><strong>Address:</strong> ${addr}</p><p><strong>Phone:</strong> ${phone}</p><p><strong>Payment:</strong> ${pay.value}</p><hr>`;
+  let total = 0;
+  cart.forEach(p => {
+    txt += `<p>${p.name} - ₹${p.price}</p>`;
+    total += p.price;
+  });
+
+  txt += `<hr><h3>Total Paid: ₹${total}</h3>`;
+
+  // Add location tracking here
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude.toFixed(5);
+        const lon = position.coords.longitude.toFixed(5);
+        txt += `<hr><p><strong>Delivery Location:</strong> Latitude: ${lat}, Longitude: ${lon}</p>`;
+        document.getElementById('receiptText').innerHTML = txt;
+        document.getElementById('cartModal').style.display = 'none';
+        document.getElementById('receiptOverlay').style.display = 'flex';
+      },
+      (error) => {
+        txt += `<p style="color:red;">Location access denied or unavailable.</p>`;
+        document.getElementById('receiptText').innerHTML = txt;
+        document.getElementById('cartModal').style.display = 'none';
+        document.getElementById('receiptOverlay').style.display = 'flex';
+      }
+    );
+  } else {
+    txt += `<p style="color:red;">Geolocation not supported by your browser.</p>`;
+    document.getElementById('receiptText').innerHTML = txt;
+    document.getElementById('cartModal').style.display = 'none';
+    document.getElementById('receiptOverlay').style.display = 'flex';
+  }
+
+  cart = [];
+  document.getElementById('cartCount').innerText = 0;
+}
+
+
+/* ------------------ UTIL ------------------ */
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+</script>
 </body>
 </html>

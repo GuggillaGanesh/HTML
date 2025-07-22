@@ -1,226 +1,1064 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Agri Shop w/ Details, Cart, Delivery & Rating</title>
-  <style>
-    body { font-family: Arial; background: #f7f7f7; padding: 20px; color: #333; }
-    h1,h2,h3 { color: #2f5d2e; margin-bottom: 10px; }
-    .hidden { display: none; }
-    .error { color: #c00; font-size: .9em; }
-    form, .dashboard { background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
-    input, button { width:100%; padding:8px; margin:6px 0; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
-    button { background: #4caf50; color: #fff; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .products { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
-    .product { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px; text-align:center; cursor:pointer; }
-    .product img { width:100%; height:100px; object-fit:cover; border-radius:4px; }
-    
-    /* Modal styles */
-    .modal, #cartModal { position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #444; padding:15px; border-radius:6px; width:80%; max-width:400px; max-height:70%; overflow:auto; display:none; z-index:1000; }
-    .modal .close, #cartModal .close { float:right; cursor:pointer; font-size:1.2em; }
-    .modal img { width:100%; height:200px; object-fit:cover; margin-bottom:10px; border-radius:4px; }
-    .rating span { font-size:25px; cursor:pointer; }
-    .rating .selected { color: orange; }
-    #cartModal table { width:100%; border-collapse:collapse; margin:10px 0; }
-    #cartModal th, #cartModal td { border:1px solid #ccc; padding:6px; }
-  </style>
+<meta charset="UTF-8">
+<title>Med Tab Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<style>
+  :root {
+    --green: rgba(0, 128, 0, 0.8);
+    --radius: 00px;
+    --login-bg-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white for login form background */
+    --header-height: 60px; /* Define a variable for header height */
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll from animations */
+    background: linear-gradient(270deg, #52b7c4, #0bd08e, #1bb3e6, #d854bb); /* Multiple colors for animation */
+    background-size: 400% 400%; /* Make background larger than viewport for animation */
+    animation: gradientAnimation 5s ease infinite; /* Apply the gradient animation */
+    display: flex; /* Use flexbox to center content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    padding-top: var(--header-height); /* Add padding to push content down */
+  }
+
+  /* Keyframe animation for the background gradient */
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  header {
+    background: var(--green);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    position: fixed; /* Keeps the header at the top of the viewport */
+    top: 0; /* Aligns it to the very top edge */
+    left: 0; /* Aligns it to the very left edge */
+    width: 100%; /* Makes it span the full width of the page */
+    z-index: 10; /* Ensures it stays above other content */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: calc(var(--header-height) - 20px); /* Adjust header height (10px padding top/bottom) */
+    display: flex; /* Use flexbox for vertical centering of title */
+    align-items: center; /* Vertically center title */
+    justify-content: center; /* Horizontally center title */
+  }
+  header h1 {
+    margin: 0; /* Remove default margin from h1 inside header */
+  }
+
+  .container {
+    max-width: 800px;
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow */
+    animation: fadeIn 0.8s ease-out; /* Fade-in animation for containers */
+  }
+
+  /* Specific styling for the login form */
+  #loginPage {
+    max-width: 300px; /* Further reduced max-width */
+    padding: 15px; /* Further reduced padding */
+    border-radius: var(--radius); /* Keep rounded corners */
+    background-color: var(--login-bg-color); /* The white background of the form itself */
+    position: relative; /* Needed for proper stacking */
+    z-index: 1; /* Ensure it's above other elements */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Keep a shadow for definition */
+  }
+
+  /* REMOVING THE BACKDROP */
+  #loginPage::before {
+    content: none !important; /* This completely disables the pseudo-element */
+  }
+
+  input,
+  button,
+  select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box; /* Include padding in width */
+  }
+
+  button {
+    background-color: var(--green);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  button:hover {
+    background-color: rgba(0, 128, 0, 1);
+    transform: translateY(-2px); /* Slight lift on hover */
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .product {
+    border: 1px solid #ddd; /* Lighter border */
+    padding: 10px;
+    background: #ffffff; /* White background for products */
+    border-radius: 8px; /* Slightly more rounded corners */
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth transition */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .product:hover {
+    transform: translateY(-5px); /* Lift and move up on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal,
+  #receiptOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeInModal 0.3s ease-out; /* Fade-in animation for modals */
+  }
+
+  .modal-content,
+  #receiptContent {
+    background: white;
+    padding: 20px; /* More padding */
+    width: 90%;
+    max-width: 400px; /* Slightly wider modal */
+    border-radius: var(--radius);
+    text-align: center;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.3s ease-out; /* Zoom-in animation for modal content */
+  }
+
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px; /* Larger close button */
+    cursor: pointer;
+    color: #555;
+    transition: color 0.2s ease;
+  }
+
+  .close:hover {
+    color: #000;
+  }
+
+  .logos img {
+    width: 60px; /* Larger payment logos */
+    margin: 0 10px;
+    vertical-align: middle;
+    border-radius: 5px;
+    transition: transform 0.2s ease;
+  }
+
+  .logos img:hover {
+    transform: scale(1.1);
+  }
+
+  /* Added style for the Cash on Delivery text label (no longer used, but kept for reference) */
+  .logos span {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #333;
+    vertical-align: middle;
+    margin-left: 5px; /* Space between radio button and text */
+  }
+
+  table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  .top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px; /* Space below top bar */
+  }
+
+  .top-bar h2 {
+    margin-top: 10px; /* Added space above "Welcome" */
+  }
+
+  .mini-btn {
+    width: auto;
+    padding: 8px 15px; /* More padding for mini buttons */
+    font-size: 14px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .mini-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .logout-btn {
+    background-color: #f44336; /* Red */
+    color: white;
+  }
+
+  .logout-btn:hover {
+    background-color: #d32f2f;
+  }
+
+  .doctor-btn {
+    background-color: #2196f3; /* Blue */
+    color: white;
+  }
+
+  .doctor-btn:hover {
+    background-color: #1976d2;
+  }
+
+  .doctor-card {
+    display: flex;
+    gap: 15px; /* More space in doctor card */
+    text-align: left;
+    padding: 15px;
+    border: 1px solid #eee; /* Lighter border */
+    border-radius: var(--radius);
+    margin: 10px 0;
+    background: #ffffff; /* White background */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .doctor-card:hover {
+    transform: translateX(5px); /* Slide right on hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .doctor-card img {
+    width: 70px; /* Larger doctor images */
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--green); /* Green border around image */
+  }
+
+  .doctor-card h4 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    color: #333;
+  }
+
+  .doctor-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #666;
+  }
+
+  .doctor-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  }
+
+  .doctor-actions a.action-btn {
+    display: inline-block; /* Treat links as block elements for padding/margin */
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-grow: 1; /* Allow buttons to grow and fill space */
+    text-align: center;
+  }
+
+  .doctor-actions a.call-btn {
+    background-color: #28a745; /* Green for call */
+    color: white;
+  }
+
+  .doctor-actions a.call-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+  }
+
+  .doctor-actions a.email-btn {
+    background-color: #007bff; /* Blue for email */
+    color: white;
+  }
+
+  .doctor-actions a.email-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+  }
+
+
+  .disease-select-label {
+    margin-top: 10px; /* More margin */
+    font-weight: bold;
+    font-size: 16px;
+    display: block;
+    text-align: left;
+    color: #333;
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: #2196f3; /* Blue link color */
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    width: auto;
+    margin: 0 5px; /* Small margin for links */
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .link-btn:hover {
+    color: #1976d2;
+  }
+
+  /* Cart price summary */
+  .price-summary {
+    margin-top: 15px; /* More margin */
+    text-align: right;
+    font-size: 16px;
+    border-top: 1px dashed #ddd; /* Dashed separator */
+    padding-top: 10px;
+  }
+
+  .price-summary span {
+    display: block;
+    margin: 5px 0; /* More spacing */
+  }
+
+  .price-summary .grand {
+    font-weight: bold;
+    font-size: 20px; /* Larger grand total */
+    color: var(--green); /* Green total */
+  }
+
+  /* New styles for cart quantity */
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* More space between items */
+    padding-bottom: 8px;
+    border-bottom: 1px dotted #ccc; /* Slightly darker dotted line */
+  }
+
+  .cart-item-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1; /* Allow details to take more space */
+  }
+
+  .cart-item-details span:first-child {
+    font-weight: bold;
+    color: #333;
+  }
+
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    margin-left: 10px; /* Space from details */
+  }
+
+  .quantity-controls button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin: 0 5px;
+    font-size: 20px; /* Larger +/- icons */
+    line-height: 1;
+    border-radius: 50%;
+    background-color: #2196f3; /* Blue buttons */
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+
+  .quantity-controls button:hover {
+    background-color: #1976d2;
+    transform: scale(1.05);
+  }
+
+  .quantity-controls span {
+    font-weight: bold;
+    min-width: 25px; /* Wider for quantity number */
+    text-align: center;
+    font-size: 1.1em;
+    color: #555;
+  }
+
+  .original-price {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 0.9em;
+    margin-left: 5px;
+  }
+
+  .discount-text {
+    color: green;
+    font-size: 0.9em;
+    margin-left: 5px;
+  }
+
+  /* Specific styling for the "View Cart" button */
+  #mainPage > button {
+    /* Target the direct child button of mainPage */
+    max-width: 200px; /* Keep it smaller */
+    margin: 20px auto; /* Center it below the products */
+    display: block; /* Make it a block element to apply margin: auto */
+    padding: 12px 25px; /* Adjust padding for better look */
+    font-size: 18px; /* Slightly larger font */
+  }
+
+  /* Styles for the QR code display area */
+  #qrCodeDisplayArea {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #eee;
+    text-align: center;
+    min-height: 180px; /* Give it some space even when empty */
+  }
+  #qrCodeDisplayArea canvas {
+    display: block; /* Center the canvas */
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  #qrCodeDisplayArea p {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 10px;
+  }
+
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInModal {
+    from {
+      background: rgba(0, 0, 0, 0);
+    }
+    to {
+      background: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  @keyframes zoomIn {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Apply slideInFromLeft to specific elements */
+  #loginPage h2,
+  #mainPage h2,
+  #mainPage h3 {
+    animation: slideInFromLeft 0.5s ease-out;
+  }
+</style>
 </head>
 <body>
-  <h1>Agri Shop</h1>
 
-  <!-- Login Steps -->
-  <form id="mobForm">
-    <h2>1. Enter Mobile</h2>
-    <input type="text" id="mobIn" placeholder="+919876543210" required><button>Send OTP</button><span class="error" id="mErr"></span>
-  </form>
-  <form id="otpForm" class="hidden">
-    <h2>2. Enter OTP</h2>
-    <input type="text" id="otpIn" placeholder="4-digit OTP" inputmode="numeric" required><button>Verify</button><span class="error" id="oErr"></span>
-  </form>
-  <form id="userForm" class="hidden">
-    <h2>3. Set Username</h2>
-    <input type="text" id="userIn" placeholder="Name" required><button>Continue</button><span class="error" id="uErr"></span>
-  </form>
+<header><h1>Med Tab Store</h1></header>
 
-  <!-- Dashboard -->
-  <div id="dash" class="hidden dashboard">
-    <h2>Welcome, <span id="userName"></span></h2>
-    <button id="logoutBtn">Logout</button>
-    <h3>Products</h3>
-    <div class="products" id="prodList"></div>
-    <button id="viewCartBtn">View Cart (<span id="cartCount">0</span>)</button>
-  </div>
+<div id="loginPage" class="container">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Enter username">
+  <input type="password" id="password" placeholder="Enter password">
+  <button onclick="login()">Login</button>
+</div>
 
-  <!-- Product Detail Modal -->
-  <div id="prodModal" class="modal">
-    <span class="close">&times;</span>
-    <img id="pmImg"><h4 id="pmName"></h4><p id="pmPrice"></p><p id="pmExpiry"></p><p id="pmQuality"></p>
-    <div class="rating" id="pmRating">
-      <span data-val="1">&#9733;</span><span data-val="2">&#9733;</span><span data-val="3">&#9733;</span><span data-val="4">&#9733;</span><span data-val="5">&#9733;</span>
+<div id="mainPage" class="container hidden">
+  <div class="top-bar">
+    <h2>Welcome <span id="user"></span></h2>
+    <div style="display:flex;gap:8px;">
+      <button class="mini-btn doctor-btn" onclick="openDoctorModal()">Doctors</button>
+      <button class="mini-btn logout-btn" onclick="logout()">Logout</button>
     </div>
-    <button id="modalAddBtn">Add to Cart</button>
   </div>
 
-  <!-- Cart Modal -->
-  <div id="cartModal">
-    <span class="close">&times;</span><h3>Your Cart</h3>
-    <table><thead><tr><th>Prod</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody id="cartBody"></tbody></table>
-    <p>Delivery: ₹<span id="delvChg">0</span></p><p><strong>Total: ₹<span id="grandTotal">0</span></strong></p>
-    <button id="clearCartBtn">Clear Cart</button>
+  <h3>Tablet Types</h3>
+  <select id="typeFilter" onchange="applyTypeFilter()">
+    <option value="all">All</option>
+    <option value="Fever">Fever</option>
+    <option value="Pain Relief">Pain Relief</option>
+    <option value="Allergy">Allergy</option>
+    <option value="Antibiotic">Antibiotic</option>
+    <option value="General">General</option>
+    <option value="Cold & Flu">Cold & Flu</option>
+    <option value="Digestive">Digestive</option>
+  </select>
+
+  <h3>Our Tablets</h3>
+  <div class="product-grid" id="products"></div>
+
+  <button onclick="openCart()">🛒 View Cart (<span id="cartCount">0</span>)</button>
+</div>
+
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('productModal')">&times;</span>
+    <img id="prodImg" width="100%">
+    <h4 id="prodName"></h4>
+    <p>Type: <span id="prodType"></span></p>
+    <p>Price: ₹<span id="prodPrice"></span></p>
+    <button onclick="addToCart()">Add to Cart</button>
   </div>
+</div>
+
+<div class="modal" id="cartModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('cartModal')">&times;</span>
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <input type="text" id="address" placeholder="Enter delivery address">
+    <input type="text" id="phone" placeholder="Enter phone number">
+    <h4>Choose Payment</h4>
+    <div class="logos">
+      <label><input type="radio" name="pay" value="PhonePe" onchange="generatePaymentQRCode()"> <img src="phonepe.png" alt="PhonePe"></label>
+      <label><input type="radio" name="pay" value="Google Pay" onchange="generatePaymentQRCode()"> <img src="googlepay.avif" alt="Google Pay"></label>
+      <label><input type="radio" name="pay" value="Paytm" onchange="generatePaymentQRCode()"> <img src="paytm.png" alt="Paytm"></label>
+    </div>
+    <div id="qrCodeDisplayArea">
+      <p>Select a payment method above to generate QR code.</p>
+    </div>
+    <button onclick="confirmOrder()">Confirm Order</button>
+  </div>
+</div>
+
+<div class="modal" id="doctorModal">
+  <div class="modal-content" style="max-width:500px;">
+    <span class="close" onclick="closeModal('doctorModal')">&times;</span>
+    <h2>Doctor Consultation</h2>
+    <label class="disease-select-label" for="diseaseSelect">Select Disease / Symptom:</label>
+    <select id="diseaseSelect" onchange="renderDoctors()">
+      <option value="all">All</option>
+      <option value="Fever">Fever</option>
+      <option value="Pain">Pain</option>
+      <option value="Allergy">Allergy</option>
+      <option value="Infection">Infection</option>
+      <option value="General">General</option>
+      <option value="Cold & Flu">Cold & Flu</option>
+      <option value="Digestive Issues">Digestive Issues</option>
+    </select>
+    <div id="doctorRecommend" style="margin-top:10px;"></div>
+    <hr>
+    <div id="doctorList"></div>
+  </div>
+</div>
+
+<div id="receiptOverlay">
+  <div id="receiptContent">
+    <span class="close" onclick="document.getElementById('receiptOverlay').style.display='none'">&times;</span>
+    <h2>🧾 Receipt</h2>
+    <div id="receiptText"></div>
+    <button onclick="window.print()">🖨️ Print</button>
+  </div>
+</div>
 
 <script>
-(() => {
-  const mobForm = document.getElementById('mobForm'),
-        otpForm = document.getElementById('otpForm'),
-        userForm = document.getElementById('userForm'),
-        dash = document.getElementById('dash'),
-        mobErr = document.getElementById('mErr'),
-        oErr = document.getElementById('oErr'),
-        uErr = document.getElementById('uErr'),
-        mobIn = document.getElementById('mobIn'),
-        otpIn = document.getElementById('otpIn'),
-        userIn = document.getElementById('userIn'),
-        userName = document.getElementById('userName'),
-        prodList = document.getElementById('prodList'),
-        viewCartBtn = document.getElementById('viewCartBtn'),
-        cartCount = document.getElementById('cartCount'),
-        prodModal = document.getElementById('prodModal'),
-        cartModal = document.getElementById('cartModal'),
-        cartBody = document.getElementById('cartBody'),
-        delvChg = document.getElementById('delvChg'),
-        grandTotal = document.getElementById('grandTotal'),
-        clearCartBtn = document.getElementById('clearCartBtn'),
-        logoutBtn = document.getElementById('logoutBtn'),
-        prodClose = prodModal.querySelector('.close'),
-        cartClose = cartModal.querySelector('.close'),
-        pmImg = document.getElementById('pmImg'),
-        pmName = document.getElementById('pmName'),
-        pmPrice = document.getElementById('pmPrice'),
-        pmExpiry = document.getElementById('pmExpiry'),
-        pmQuality = document.getElementById('pmQuality'),
-        pmRating = document.getElementById('pmRating'),
-        modalAddBtn = document.getElementById('modalAddBtn');
+/* ------------------ DATA ------------------ */
+let cart = []; // Each item in cart will now be { product: productObject, quantity: number }
+let selectedProduct = null;
 
-  let otp = '', mobile = '', username = '', selectedProd = null;
-  const deliveryPerItem = 50;
-  let cart = JSON.parse(sessionStorage.getItem('cart') || '{}');
+const productData = [
+  {name:'Paracetamol',   price:30, type:'Fever',         img:'https://texinkart.com/cdn/shop/products/Calpol-500----Paracetamol-Tablets-IP-500mg---15Tablets-GSK-1667079349.jpg?v=1747710965'},
+  {name:'Ibuprofen',     price:45, type:'Pain Relief', img:'https://5.imimg.com/data5/SELLER/Default/2022/8/JE/NA/UY/24119759/ibuprofen-tablets-i-p-200mg.jpg'},
+  {name:'Aspirin',       price:60, type:'Pain Relief', img:'https://5.imimg.com/data5/SELLER/Default/2023/7/330506870/UM/GZ/QO/135658020/aspirin-dispersible-tablets.jpg'},
+  {name:'Amoxicillin',   price:90, type:'Antibiotic',    img:'https://5.imimg.com/data5/SELLER/Default/2020/12/HD/IF/ML/95289/amoxicillin-tablets-1000mg.jpeg'},
+  {name:'Cetrizine',     price:25, type:'Allergy',       img:'https://tiimg.tistatic.com/fp/1/007/509/cetcip-cetrizine-hydrochloride-tablets-ip-10mg-10x5x10-blister-pack-483.jpg'},
+  {name:'Dolo 650',      price:35, type:'Fever',         img:'https://5.imimg.com/data5/SELLER/Default/2023/12/369247058/BS/ZD/LQ/101727781/dolo-650-paracetamol-tablets.jpeg'},
+  {name:'Coldarin',      price:40, type:'Cold & Flu',    img:'https://5.imimg.com/data5/SELLER/Default/2023/10/351659223/KM/CN/QY/195977119/coldarin-tablet.jpg'},
+  {name:'Digene',        price:55, type:'Digestive',     img:'https://newassets.apollo247.com/pub/media/catalog/product/d/i/dig0001.jpg'}
+];
 
-  function saveCart() {
-    sessionStorage.setItem('cart', JSON.stringify(cart));
-    cartCount.textContent = Object.values(cart).reduce((s,i)=>s+i.qty,0);
+const doctorData = [
+  {
+    name:'Dr. Ramesh Kumar',
+    specialty:'General Physician',
+    diseases:['Fever','General', 'Cold & Flu'],
+    phone:'+919000000001',
+    email:'dr.ramesh@example.com',
+    img:'doctor.jpg'
+  },
+  {
+    name:'Dr. Anita Rao',
+    specialty:'Allergist / Immunologist',
+    diseases:['Allergy'],
+    phone:'+919000000002',
+    email:'dr.anita@example.com',
+    img:'female.jpg'
+  },
+  {
+    name:'Dr. Vivek Sharma',
+    specialty:'Infectious Disease',
+    diseases:['Infection','Fever'],
+    phone:'+919000000003',
+    email:'dr.vivek@example.com',
+    img:'indian.png'
+  },
+  {
+    name:'Dr. Priya Menon',
+    specialty:'Pain Specialist',
+    diseases:['Pain'],
+    phone:'+919000000004',
+    email:'dr.priya@example.com',
+    img:'femaleindian.jpg'
+  },
+  {
+    name:'Dr. Sanjay Gupta',
+    specialty:'Gastroenterologist',
+    diseases:['Digestive Issues'],
+    phone:'+919000000005',
+    email:'dr.sanjay@example.com',
+    img:'doctor2.jpg'
+  },
+  {
+    name:'Dr. Pooja Singh',
+    specialty:'Family Medicine',
+    diseases:['General', 'Cold & Flu', 'Fever'],
+    phone:'+919000000006',
+    email:'dr.pooja@example.com',
+    img:'female2.jpg'
+  }
+];
+
+/* Disease → Recommended tablet types (mapped to product types) */
+const diseaseRecommendations = {
+  'Fever':['Fever'],
+  'Pain':['Pain Relief'],
+  'Allergy':['Allergy'],
+  'Infection':['Antibiotic'],
+  'General':['Fever','Pain Relief','Allergy','Antibiotic','General', 'Cold & Flu', 'Digestive'],
+  'Cold & Flu':['Cold & Flu', 'Fever'],
+  'Digestive Issues':['Digestive']
+};
+
+/* ------------------ AUTH ------------------ */
+function login() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  if (u && p) {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainPage').classList.remove('hidden');
+    document.getElementById('user').innerText = u;
+    showProducts(); // default show all
+  } else {
+    alert("Please enter username & password.");
+  }
+}
+
+function logout() {
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('products').innerHTML = '';
+  document.getElementById('cartCount').innerText = 0;
+  document.getElementById('typeFilter').value = 'all';
+  cart = [];
+}
+
+/* ------------------ PRODUCTS ------------------ */
+function showProducts(filterType='all') {
+  const div = document.getElementById('products');
+  div.innerHTML = '';
+  const list = filterType === 'all'
+    ? productData
+    : productData.filter(p => p.type === filterType);
+  if (list.length === 0) {
+    div.innerHTML = '<p>No tablets found for this type.</p>';
+    return;
+  }
+  list.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'product';
+    el.innerHTML = `
+      <img src="${p.img}" width="100%" alt="${p.name}">
+      <h4>${p.name}</h4>
+      <p>₹${p.price}</p>
+      <small>${p.type}</small>
+    `;
+    el.onclick = () => showProduct(p);
+    div.appendChild(el);
+  });
+}
+
+function applyTypeFilter() {
+  const type = document.getElementById('typeFilter').value;
+  showProducts(type === 'all' ? 'all' : type);
+}
+
+function showProduct(p) {
+  selectedProduct = p;
+  document.getElementById('prodImg').src = p.img;
+  document.getElementById('prodName').innerText = p.name;
+  document.getElementById('prodType').innerText = p.type;
+  document.getElementById('prodPrice').innerText = p.price;
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function addToCart() {
+  if (!selectedProduct) return;
+
+  const existingItemIndex = cart.findIndex(item => item.product.name === selectedProduct.name);
+
+  if (existingItemIndex > -1) {
+    cart[existingItemIndex].quantity += 1;
+  } else {
+    cart.push({ product: selectedProduct, quantity: 1 });
   }
 
-  mobForm.onsubmit = e => {
-    e.preventDefault();
-    mobile = mobIn.value.trim();
-    if(!/^\+\d{10,15}$/.test(mobile)){ mobErr.innerText='Invalid format'; return; }
-    otp = Array.from({length:4},()=>Math.floor(Math.random()*10)).join('');
-    console.log('OTP:',otp);
-    mobForm.classList.add('hidden');
-    otpForm.classList.remove('hidden');
-  };
+  updateCartCount();
+  closeModal('productModal');
+}
 
-  otpForm.onsubmit = e => {
-    e.preventDefault();
-    if(otpIn.value!==otp){ oErr.innerText='Wrong OTP'; return; }
-    sessionStorage.setItem('mobile', mobile);
-    otpForm.classList.add('hidden');
-    userForm.classList.remove('hidden');
-  };
+function updateCartCount() {
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  document.getElementById('cartCount').innerText = totalItems;
+}
 
-  userForm.onsubmit = e => {
-    e.preventDefault();
-    username = userIn.value.trim();
-    if(!username){ uErr.innerText='Enter name'; return; }
-    sessionStorage.setItem('username', username);
-    userName.textContent = username;
-    userForm.classList.add('hidden');
-    dash.classList.remove('hidden');
-    loadProducts(); saveCart();
-  };
+/* ------------------ CART ------------------ */
+function openCart() {
+  const div = document.getElementById('cartItems');
+  div.innerHTML = '';
+  let subtotal = 0;
+  let totalItemsInCart = 0;
 
-  function loadProducts() {
-    const exp = new Date(Date.now()+7*864e5).toISOString().split('T')[0];
-    const prods = [
-      {name:"Basmati Rice", price:150, quality:"Excellent", img:"https://5.imimg.com/data5/ANDROID/Default/2022/1/LD/JO/AR/85849429/product-jpeg.jpg"},
-      {name:"Turmeric Spice", price:200, quality:"Excellent", img:"https://m.media-amazon.com/images/I/81NrjPnmBUL._UF1000,1000_QL80_.jpg"},
-      {name:"Black Tea", price:250, quality:"Good", img:"https://m.media-amazon.com/images/I/71rtxZgzOWL.jpg"},
-        {name:"Organic Wheat Flour", price:120 , quality:"Good", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsITu7NQoztMzLzRS0FowZske8ymNp_8Goyw&s"},
-         {name:"Ginger", price:220, quality:"Good", img:"https://images-cdn.ubuy.co.in/67fb81fe54dc723943012088-organic-ginger-powder-2lbs-32oz.jpg"},
-        {name:"Fresh Spinach", price:80, quality:"Fresh", img:"https://m.media-amazon.com/images/I/51T3025eGcL._UF1000,1000_QL80_.jpg"},
-        {name:"Honey", price:300, quality:"Pure", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQB9vidPJnZtlT7If35oElKJN6GjltGJMI4Nw&s"},
-        { name: "Organic Potatoes", price: 60, quality: "Fresh", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ50kOIf3s2YknST25PHxiPKL1yHPqQwo2zkQ&s" },
-        { name: "Green Beans", price: 90, quality: "Fresh", img: "https://cdn.loveandlemons.com/wp-content/uploads/2014/11/green-beans-2.jpg" },
-       
-    ];
-    prodList.innerHTML = '';
-    prods.forEach(p => {
-      const d = document.createElement('div');
-      d.className = 'product';
-      d.innerHTML = `<img src="${p.img}" alt="${p.name}"><h4>${p.name}</h4><p>₹${p.price}</p>`;
-      d.onclick = () => {
-        selectedProd = {...p,expiry:exp};
-        pmImg.src = p.img; pmName.textContent = p.name;
-        pmPrice.textContent = 'Price: ₹'+p.price;
-        pmExpiry.textContent = 'Expiry: '+exp;
-        pmQuality.textContent = 'Quality: '+p.quality;
-        [...pmRating.children].forEach(s => s.classList.remove('selected'));
-        prodModal.style.display = 'block';
-      };
-      prodList.appendChild(d);
+  if (cart.length === 0) {
+    div.innerHTML = '<p>Your cart is empty.</p>';
+  } else {
+    cart.forEach((item, index) => {
+      const product = item.product;
+      const quantity = item.quantity;
+      const itemTotal = product.price * quantity;
+      subtotal += itemTotal;
+      totalItemsInCart += quantity;
+
+      const itemElement = document.createElement('div');
+      itemElement.className = 'cart-item';
+      itemElement.innerHTML = `
+        <div class="cart-item-details">
+          <span>${product.name}</span>
+          <span>₹${product.price.toFixed(2)} x ${quantity} = ₹${itemTotal.toFixed(2)}</span>
+        </div>
+        <div class="quantity-controls">
+          <button onclick="updateCartQuantity(${index}, -1)">-</button>
+          <span>${quantity}</span>
+          <button onclick="updateCartQuantity(${index}, 1)">+</button>
+        </div>
+      `;
+      div.appendChild(itemElement);
     });
   }
 
-  pmRating.onclick = e => {
-    if(e.target.dataset.val){
-      const val = e.target.dataset.val;
-      [...pmRating.children].forEach(s => s.classList.toggle('selected', s.dataset.val<=val));
-      selectedProd.rating = val;
-    }
-  };
+  const discountRate = 0.05;
+  const discount = +(subtotal * discountRate).toFixed(2);
+  const grand = subtotal - discount;
 
-  modalAddBtn.onclick = () => {
-    if(!selectedProd.rating) alert('Please select a rating!');
-    else {
-      cart[selectedProd.name] = cart[selectedProd.name] || {...selectedProd, qty:0};
-      cart[selectedProd.name].qty++;
-      saveCart();
-      prodModal.style.display = 'none';
-    }
-  };
-  prodClose.onclick = () => prodModal.style.display='none';
+  div.innerHTML += `
+    <div class="price-summary">
+      <span>Subtotal: ₹${subtotal.toFixed(2)}</span>
+      <span>5% Discount: -₹${discount.toFixed(2)}</span>
+      <span class="grand">Grand Total: ₹${grand.toFixed(2)}</span>
+    </div>
+  `;
+  document.getElementById('cartCount').innerText = totalItemsInCart; // Update main cart count
 
-  viewCartBtn.onclick = () => {
-    cartBody.innerHTML = '';
-    let subtotal = 0, itemCount=0;
-    Object.values(cart).forEach(i=>{
-      itemCount+=i.qty;
-      const sub = i.qty*i.price;
-      subtotal+=sub;
-      cartBody.innerHTML += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${sub}</td></tr>`;
+  // Clear previous QR code and message when opening cart
+  const qrArea = document.getElementById('qrCodeDisplayArea');
+  qrArea.innerHTML = '<p>Select a payment method above to generate QR code.</p>';
+  // Uncheck any previously selected payment method when cart is opened
+  const radioButtons = document.querySelectorAll('input[name="pay"]');
+  radioButtons.forEach(radio => radio.checked = false);
+
+
+  document.getElementById('cartModal').style.display = 'flex';
+}
+
+function updateCartQuantity(index, change) {
+  if (cart[index]) {
+    cart[index].quantity += change;
+    if (cart[index].quantity <= 0) {
+      cart.splice(index, 1); // Remove item if quantity is 0 or less
+    }
+    openCart(); // Re-render the cart to reflect changes, which also clears QR area
+    // After updating cart, if a payment option was selected, regenerate QR code with updated total
+    const selectedPayMethod = document.querySelector('input[name="pay"]:checked');
+    if (selectedPayMethod) {
+      generatePaymentQRCode(); // Regenerate QR code with updated total
+    }
+  }
+}
+
+function generatePaymentQRCode() {
+  const qrCodeDisplayArea = document.getElementById('qrCodeDisplayArea');
+  qrCodeDisplayArea.innerHTML = ''; // Clear previous QR code or message
+
+  const selectedPay = document.querySelector('input[name="pay"]:checked');
+  if (!selectedPay) {
+    qrCodeDisplayArea.innerHTML = '<p>Select a payment method above to generate QR code.</p>';
+    return;
+  }
+
+  // For PhonePe, Google Pay, Paytm, generate QR code
+  let subtotal = 0;
+  cart.forEach(item => {
+    subtotal += item.product.price * item.quantity;
+  });
+  const discountRate = 0.05;
+  const discount = +(subtotal * discountRate).toFixed(2);
+  const grand = (subtotal - discount).toFixed(2); // Ensure it's a string with 2 decimal places
+
+  const upiId = "yourupiid@bank"; // *** IMPORTANT: REPLACE WITH YOUR ACTUAL UPI ID ***
+  const merchantName = "Med Tab Store";
+  const transactionId = "TXN" + Date.now() + Math.floor(Math.random() * 1000); // Simple unique ID
+
+  // Construct the UPI deep link
+  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${grand}&tid=${transactionId}`;
+
+  try {
+    new QRCode(qrCodeDisplayArea, {
+      text: upiUrl,
+      width: 150,
+      height: 150,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H // High error correction
     });
-    delvChg.textContent = itemCount*deliveryPerItem;
-    grandTotal.textContent = subtotal + itemCount*deliveryPerItem;
-    cartModal.style.display = 'block';
-  };
-  cartClose.onclick = () => cartModal.style.display='none';
-  clearCartBtn.onclick = () => { cart={}; saveCart(); cartBody.innerHTML=''; delvChg.textContent='0'; grandTotal.textContent='0'; };
+    const p = document.createElement('p');
+    p.textContent = `Scan this QR code with ${selectedPay.value} or any UPI app to pay ₹${grand}.`;
+    qrCodeDisplayArea.appendChild(p);
+  } catch (e) {
+    console.error("QR Code generation error:", e);
+    qrCodeDisplayArea.innerHTML = `<p style="color:red;">Failed to generate QR code for ${selectedPay.value}.</p>`;
+  }
+}
 
-  logoutBtn.onclick = () => sessionStorage.clear() && location.reload();
 
-  window.onload = () => {
-    mobile = sessionStorage.getItem('mobile');
-    username = sessionStorage.getItem('username');
-    if(mobile && username){
-      userName.textContent = username;
-      mobForm.classList.add('hidden'); otpForm.classList.add('hidden');
-      userForm.classList.add('hidden'); dash.classList.remove('hidden');
-      loadProducts(); saveCart();
-    }
-  };
-})();
+function confirmOrder() {
+  const addr = document.getElementById('address').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const pay = document.querySelector('input[name="pay"]:checked');
+
+  if (cart.length === 0) {
+    alert("Your cart is empty. Please add items before confirming your order.");
+    return;
+  }
+
+  if (!addr || !phone || !pay) {
+    alert("Please fill all details and select a payment method."); // Updated message
+    return;
+  }
+
+  let txt = `
+    <p><strong>Address:</strong> ${addr}</p>
+    <p><strong>Phone:</strong> ${phone}</p>
+    <p><strong>Payment Method:</strong> ${pay.value}</p>
+    <hr>
+  `;
+
+  let subtotal = 0;
+  cart.forEach(item => {
+    const product = item.product;
+    const quantity = item.quantity;
+    const itemTotal = product.price * quantity;
+    txt += `<p>${product.name} (x${quantity}) - ₹${itemTotal.toFixed(2)}</p>`;
+    subtotal += itemTotal;
+  });
+
+  const discountRate = 0.05;
+  const discount = +(subtotal * discountRate).toFixed(2);
+  const grand = subtotal - discount;
+
+  txt += `
+    <hr>
+    <p>Subtotal: ₹${subtotal.toFixed(2)}</p>
+    <p>5% Discount: -₹${discount.toFixed(2)}</p>
+    <h3>Total Paid: ₹${grand.toFixed(2)}</h3>
+  `;
+
+  // Add location tracking here
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude.toFixed(5);
+        const lon = position.coords.longitude.toFixed(5);
+        txt += `<hr><p><strong>Delivery Location:</strong> Latitude: ${lat}, Longitude: ${lon}</p>`;
+        document.getElementById('receiptText').innerHTML = txt;
+        document.getElementById('cartModal').style.display = 'none';
+        document.getElementById('receiptOverlay').style.display = 'flex';
+      },
+      (error) => {
+        txt += `<p style="color:red;">Location access denied or unavailable.</p>`;
+        document.getElementById('receiptText').innerHTML = txt;
+        document.getElementById('cartModal').style.display = 'none';
+        document.getElementById('receiptOverlay').style.display = 'flex';
+      }
+    );
+  } else {
+    txt += `<p style="color:red;">Geolocation not supported by your browser.</p>`;
+    document.getElementById('receiptText').innerHTML = txt;
+    document.getElementById('cartModal').style.display = 'none';
+    document.getElementById('receiptOverlay').style.display = 'flex';
+  }
+
+  cart = [];
+  updateCartCount(); // Reset cart count on the main page
+}
+
+
+/* ------------------ DOCTORS ------------------ */
+function openDoctorModal() {
+  document.getElementById('doctorModal').style.display = 'flex';
+  document.getElementById('diseaseSelect').value = 'all';
+  renderDoctors();
+}
+
+function renderDoctors() {
+  const selected = document.getElementById('diseaseSelect').value;
+  const listDiv = document.getElementById('doctorList');
+  const recDiv = document.getElementById('doctorRecommend');
+  listDiv.innerHTML = '';
+  recDiv.innerHTML = '';
+
+  // Recommended tablet types
+  let recTypes = [];
+  if (selected === 'all') {
+    recTypes = ['Fever','Pain Relief','Allergy','Antibiotic', 'Cold & Flu', 'Digestive'];
+  } else {
+    // map disease key to product type(s)
+    recTypes = diseaseRecommendations[selected] || [];
+  }
+  if (recTypes.length) {
+    const btns = recTypes.map(t =>
+      `<button class="link-btn" onclick="selectTypeFromDoctor('${t}')">${t}</button>`
+    ).join(' | ');
+    recDiv.innerHTML = `<strong>Recommended Tablet Types:</strong> ${btns}`;
+  }
+
+  // Filter doctors by disease
+  const docs = selected === 'all'
+    ? doctorData
+    : doctorData.filter(d => d.diseases.includes(selected));
+
+  if (docs.length === 0) {
+    listDiv.innerHTML = '<p>No doctors found for this disease.</p>';
+    return;
+  }
+
+  docs.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'doctor-card';
+    card.innerHTML = `
+      <img src="${d.img}" alt="${d.name}">
+      <div>
+        <h4>${d.name}</h4>
+        <p><strong>${d.specialty}</strong></p>
+        <p>Treats: ${d.diseases.join(', ')}</p>
+        <p>📞 ${d.phone}</p>
+        <p>✉️ ${d.email}</p>
+        <div class="doctor-actions">
+          <a href="tel:${d.phone}" class="action-btn call-btn">Call Doctor</a>
+          <a href="mailto:${d.email}" class="action-btn email-btn">Email Doctor</a>
+        </div>
+      </div>
+    `;
+    listDiv.appendChild(card);
+  });
+}
+
+function selectTypeFromDoctor(typeName) {
+  closeModal('doctorModal');
+  document.getElementById('typeFilter').value = typeName;
+  applyTypeFilter();
+  // Scroll to product section
+  document.getElementById('products').scrollIntoView({behavior:'smooth'});
+}
+
+/* ------------------ UTIL ------------------ */
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
 </script>
 </body>
 </html>
